@@ -9,3 +9,17 @@ Tested on Linux Ubuntu 22.04 LTE with R version 4.1.3 and on CERN CentOS Linux r
 * [Rcpp](https://cran.r-project.org/web/packages/Rcpp/index.html)
 * [minpack.lm](https://cran.r-project.org/web/packages/minpack.lm/index.html)
 * [ks](https://cran.r-project.org/web/packages/ks/index.html)
+
+The fitting is based on [Levenberg-Marquardt Algorithm](https://www.sciencedirect.com/topics/engineering/levenberg-marquardt-algorithm), aka damped least-squares (DLS), which is used to solve non-linear least squares problems. In the directory ```/rsrc```,  there are executables to fit standalone histograms (```fitOneHistogramLMA2.R```, ```fitOneHistogramLMA3.R```) and multi-voxel (```runMultiVoxelFitLMA2.R```, ```runMultiVoxelFitLMA3.R```). 
+
+The data format is ASCII for single histograms (first column - time delay in ns, second - histogram counts in a.u.). For multi-voxel, it is binary, requiring two files -- for voxel indices and for histograms counts as an array (each row is one histogram). The files can be stored either as an ```R``` ```.rds``` format, or binaries in little-endian (2-byte integers for voxel indices with columns -- for axes, and 4-byte floats -- for histograms). In ```R```, the structure of the two is as follows:
+
+```
+> str(voxel_IDs)
+ int [1:22788, 1:3] -18 -18 -18 -18 -18 -18 -18 -18 -18 -18 ...
+> str(histograms)
+ num [1:22788, 1:137] 0 0 0 0 0 0 0 0 0 0 ...
+```
+Please refer to ```/examples``` for more information.
+
+(c) 2025 Roman Shopa
