@@ -18,6 +18,6 @@ The ```--vanilla``` argument prevents some user-specific R settings to activate 
 
 The arguments for each executable can be checked via help using keys ```-h```, ```--help```, ```-?``` or without any argument given, for instance: 
 
-```Rscript [--vanilla] fitOneHistogramLMA2.R -?```
+```Rscript fitOneHistogramLMA2.R -?```
 
 Note that all scripts require a compilation of ```/cpp/kdeCPP.cpp``` functions each time. A proper R package creation is an option, though not implemented in this repository.
