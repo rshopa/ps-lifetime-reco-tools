@@ -66,7 +66,6 @@ setBestFitEnvironment <- function( LMAParams )
   # Z-score, see sqlpad.io/tutorial/remove-outliers/
   ..noOutliersFactVector <- function(V)
   {
-    # if median (from LMAParams[["kde_params"]][["drop_outliers_by_median"]])
     if( .kde.pars.lst[["drop_outliers_by_median"]] ) z <- (V - median(V)) / sd(V)
     else z <- (V - mean(V)) / sd(V)
     return( abs(z) <= ..sd.rng.outliers )
@@ -368,7 +367,6 @@ setBestFitEnvironment <- function( LMAParams )
   
   # eg. c(Sd, Mu, RSE.wgt)
   findBestFitKDEFor2ParamTab <- function( TabFiltWWgts,
-                                          Median  = TRUE,
                                           Verbose = TRUE )
   {
     if(Verbose) ..infoKDE( TabFiltWWgts, Mode = "Tab" )

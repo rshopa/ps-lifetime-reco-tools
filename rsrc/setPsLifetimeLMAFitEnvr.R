@@ -150,7 +150,6 @@ setPsLifetimeLMAFitEnvironment <- function()
     RSE.best <- .best.fit.env[["findQuickBestByRSEFor2Or3Cols"]]( lmfit, Verbose = Verbose )   # from fit tab
     filt.lst <- .best.fit.env[["sortFilt2Or3Cols"]]( lmfit, AddWeight = TRUE )                 # Verbose = FALSE
     KDE.best <- .best.fit.env[["findBestFitKDEFor2ParamTab"]]( filt.lst[["TabFiltered"]],
-                                                              Median = .kde.pars.lst[["median_cut_for_outliers"]], 
                                                               Verbose = Verbose  ) # from list of sorted
     # II - log stage
     # !!! slow: executed twice !!!

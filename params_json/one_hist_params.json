@@ -41,8 +41,7 @@
       "max_axis_length_2d": 151,
       "max_axis_length_3d": 101,
       "max_axis_length_4d": 51,
-      "min_n_solutions": 20,
-      "median_cut_for_outliers": true
+      "min_n_solutions": 20
     }
   }
 }

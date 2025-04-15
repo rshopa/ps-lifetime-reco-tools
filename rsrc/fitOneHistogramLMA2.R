@@ -18,7 +18,7 @@ args <- commandArgs(trailingOnly = TRUE)
 
 # HELP & usage
 USAGE.LINE <- paste("\nUsage:\n",
-                    "Rscript [--vanilla] fitOneHistogramLMA3.R", "-p <json_params>", 
+                    "Rscript [--vanilla] fitOneHistogramLMA2.R", "-p <json_params>", 
                     "-s <lifetime_spectrum_ascii>", "-o <output_prefix>\n",
                     "[-v] [> <output_log>]\n\n")
 if( length(args) == 0 | args[1] == "-h" | args[1] == "--help" | args[1] == "-?")

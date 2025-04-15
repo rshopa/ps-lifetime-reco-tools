@@ -1,34 +1,23 @@
 # Examples
 
-Here, a brief description how to execute the exemplary fitting is given.
+Here, a brief description how to execute the exemplary fitting is given. Please refer to the description of the input parameters (in JSON format) in ```/params_json``` directory.
 
-## Parameters
+Four executives are available. The basic usage for the single-histogram minimisation is:
 
-### _Ps lifetime spectrum parameters_
+```Rscript [--vanilla] fitOneHistogramLMA2.R -p <json_params> -s <lifetime_spectrum_ascii> -o <output_prefix> [-v] [> <output_log>]```
 
-In a JSON file (see ```/params_json```), the first major block is ```"dt_histogram_params"```, which sets the basic initial parameters and ranges for multi-stage Levenberg-Marquardt (LM) fitting.
+```Rscript [--vanilla] fitOneHistogramLMA3.R -p <json_params> <lifetime_spectrum_ascii> -o <output_prefix> [-fixed-ints-ratio] [-three-stage] [-d <material_density>] [-v] [> <output_log>]```
 
-Those parameters are as follows refer to the below image for more:
+And for the multi-histogram (multi-voxel) fitting:
 
--- ```"tau_dir_ns"``` : mean lifetime of direct annihilations (in ns)
+```Rscript [--vanilla] runMultiVoxelFitLMA2.R -p <json_params> -dt <min,max,n_bins> -s <lifetime_spectra> -vox-ids <voxel_coordinates> -o <output_prefix> [-vox-size <x_mm,y_mm,z_mm>] [-preserve-na] [-na-to-zero] [-v] [> <output_log>]```
 
--- ```"tau_pps_ns"``` : mean lifetime of para-positronium
+```Rscript [--vanilla] runMultiVoxelFitLMA3.R -p <json_params> -dt <min,max,n_bins> -s <lifetime_spectra> -vox-ids <voxel_coordinates> -o <output_prefix> [-vox-size <x_mm,y_mm,z_mm>] [-fixed-ints-ratio] [-preserve-na] [-na-to-zero] [-three-stage] [-v] [> <output_log>]```
 
--- ```"dt_range_cut_ns"``` : general time delay range where LM will be applied
+The ```--vanilla``` argument prevents some user-specific R settings to activate and makes sure no saving or restoring of workspaces is made.
 
--- ```"bgr_range_to_ignore_ns"``` : range to ignore in assessing the background (leaving only histogram "tails")
+The arguments for each executable can be checked via help using keys ```-h```, ```--help```, ```-?``` or without any argument given, for instance: 
 
--- ```"log_cut_range_ns"``` : time delay range for the second stage  in logarithmic scale
+```Rscript [--vanilla] fitOneHistogramLMA2.R -?```
 
--- ```"int_threshold_for_log_to_drop_au"``` : a threshold to drop histogram points below it (helps for sparse data)
-
--- ```"calc_bgr_from_full_span"``` : if true, ignores ```"dt_range_cut_ns"``` in background estimation and uses all time delay range available
-
--- ```"low_threshold_for_first_fit_ns"``` : raises the lower range for the first (linear) fit (ignored if null)
-
--- ```"third_stage_dt_range_cut_ns"``` : time delay range for the optional third stage (ignored if null)
-
--- ```"reduce_bgr_for_randoms"``` : if true, the lower range of 95% C.I. for background is subtracted from histogram (helps a little for data with many randoms)
-
-![Alt text](HistRangesExample.png)
-
+Note that all scripts require a compilation of ```/cpp/kdeCPP.cpp``` functions each time. A proper R package creation is an option, though not implemented in this repository.
