@@ -20,4 +20,6 @@ The arguments for each executable can be checked via help using keys ```-h```, `
 
 ```Rscript fitOneHistogramLMA2.R -?```
 
+The examples put in this directory are for both separate histograms (in ```/single_histograms```, ASCII format) and multi-voxel data -- for a [NEMA IEC phantom](https://www.spect.com/our-products/nema-iec-pet-body-phantom) (in ```\multi_voxel```, in both binary formats and RDS -- see main README). For the latter, only a fragment of data is given -- for the voxels around the largest phantom sphere.
+
 Note that all scripts require a compilation of ```/cpp/kdeCPP.cpp``` functions each time. A proper R package creation is an option, though not implemented in this repository.
