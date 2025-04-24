@@ -142,6 +142,7 @@ for( i in seq_len(n.hsts) )
     fit.env[["fitHistByMultiStageLMA3IratioSwitchableOMP"]]( dt.ns, 
                                                              hists.tab[i,], 
                                                              IRatioFixed = int.ratio.fixed,
+                                                             FixedTauDir = FALSE,             # tau_dir is always free for multi-voxel
                                                              RefineWFixedTauoPs = three.stage,
                                                              RefinedDtRange = dt.range.3rd.stage,
                                                              Verbose = verbose )

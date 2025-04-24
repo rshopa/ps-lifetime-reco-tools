@@ -121,6 +121,7 @@ setPsLifetimeLMAFitEnvironment <- function()
   fitHistByMultiStageLMA3IratioSwitchableOMP <- function(  DtAxisNs, 
                                                            HistAU, 
                                                            IRatioFixed        = FALSE,
+                                                           FixedTauDir        = TRUE,
                                                            RefineWFixedTauoPs = TRUE,
                                                            MatterDensitygmL   = NULL,   # if tau_dir is to be modified according to density
                                                            RefinedDtRange     = NULL,   # if arbitrary Dt range is needed for the third fit
@@ -128,9 +129,14 @@ setPsLifetimeLMAFitEnvironment <- function()
   {
     .definePsLifetimeSpectrum( DtAxisNs, HistAU, MatterDensitygmL ) # tau_dir not used here
     
-    # ---------- direct fit: linear scale, full span, tau_dir = const ----------
-    fit.name <- if( IRatioFixed ) "runSeededLMA3TauDirLinIRatioFixedOMP"
-    else "runSeededLMA3TauDirLinOMP"
+    # ---------- direct fit: linear scale, full span ----------
+    # select proper function
+    fit.name <- if( IRatioFixed ) "runSeededLMA3AllFreeLinIRatioFixedOMP"
+                else "runSeededLMA3AllFreeLinOMP"
+    if( FixedTauDir )
+      fit.name <- if( IRatioFixed ) "runSeededLMA3TauDirLinIRatioFixedOMP"
+                  else "runSeededLMA3TauDirLinOMP"
+    
     lmfit.dir <- .lma.env[[fit.name]]( .pars.env[["ini.guess.df"]],
                                        FullSpan        = TRUE,
                                        LowThrldDt      = NULL,

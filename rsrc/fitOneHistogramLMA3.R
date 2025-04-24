@@ -20,7 +20,7 @@ args <- commandArgs(trailingOnly = TRUE)
 USAGE.LINE <- paste("\nUsage:\n",
                     "Rscript [--vanilla] fitOneHistogramLMA3.R", "-p <json_params>", 
                     "-s <lifetime_spectrum_ascii>", "-o <output_prefix>\n",
-                    "[-fixed-ints-ratio] [-three-stage] [-d <material_density>]",
+                    "[-fixed-ints-ratio] [-free-tau-direct] [-three-stage] [-d <material_density>]",
                     "[-v] [> <output_log>]\n\n")
 if( length(args) == 0 | args[1] == "-h" | args[1] == "--help" | args[1] == "-?")
 {
@@ -31,6 +31,7 @@ if( length(args) == 0 | args[1] == "-h" | args[1] == "--help" | args[1] == "-?")
   cat("-o/--out : output prefix (for JSON and RDS)\n")
   cat("\nOptional:\n")
   cat("-fixed-ints-ratio : fixes intensity ratio - direct : p-Ps : o-Ps = 60% : 10% : 30%\n")
+  cat("-free-tau-direct : sets mean lifetime for direct free parameter (-d is ignored)\n")
   cat("-three-stage : adds a third-stage fit, linear scale with fixed tau_oPs\n")
   cat("-d/--density : in [g/mL], adjusts tau_dir by material density\n")
   cat("-v/--verbose : shows info during LMA fitting\n\n")
@@ -41,6 +42,7 @@ output.prefix <- NULL
 hist.path     <- NULL
 # optional
 int.ratio.fixed <- FALSE
+free.tau.direct <- FALSE
 three.stage     <- FALSE
 matter.density  <- NULL
 verbose         <- FALSE
@@ -52,6 +54,7 @@ for( i in seq_along(args) )
   else if(args[i] == "-s" | args[i] == "--hist") hist.path <- args[i + 1]
   else if(args[i] == "-o" | args[i] == "--out") output.prefix <- args[i + 1]
   else if(args[i] == "-fixed-ints-ratio") int.ratio.fixed <- TRUE
+  else if(args[i] == "-free-tau-direct") free.tau.direct <- TRUE
   else if(args[i] == "-three-stage") three.stage <- TRUE
   else if(args[i] == "-d" | args[i] == "--density") 
     matter.density <- as.numeric(args[i + 1])
@@ -90,6 +93,7 @@ LMA3fit <-
   fit.env[["fitHistByMultiStageLMA3IratioSwitchableOMP"]]( DF.hist[["Dt"]], 
                                                            DF.hist[["Hst"]], 
                                                            IRatioFixed = int.ratio.fixed,
+                                                           FixedTauDir = !free.tau.direct,
                                                            RefineWFixedTauoPs = three.stage,
                                                            MatterDensitygmL = matter.density,
                                                            RefinedDtRange = dt.range.3rd.stage,
@@ -106,3 +110,4 @@ rds.path  <- paste0(output.prefix,".rds")
 write_json( LMA3fit, pretty = TRUE, auto_unbox = T, digits = 6, path = json.path )
 saveRDS( LMA3fit, file = rds.path )
 cat("\nResults written to files:\n", json.path, "\n", rds.path, "\n" )
+
