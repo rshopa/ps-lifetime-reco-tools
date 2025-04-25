@@ -1,6 +1,6 @@
 # Ps lifetime reconstruction tools
 
-This is a set of non-linear minimisation tools, written in [R language](https://cran.r-project.org/), to fit [positronium](https://en.wikipedia.org/wiki/Positronium) (Ps) lifetime spectra, either separate or as a multi-voxel array representing Positronium lifetime imaging (PLI). More on the latter [here](https://doi.org/10.1109/TMI.2024.3357659), [here](https://koza.if.uj.edu.pl/files/d0bf762aba4f68695caac0f1d5745279/09059856.pdf) or [here](https://arxiv.org/abs/2501.04145) .
+This is a set of non-linear minimisation tools, written in [R language](https://cran.r-project.org/), to fit [positronium](https://en.wikipedia.org/wiki/Positronium) (Ps) lifetime spectra, either separate or as a multi-voxel array representing Positronium lifetime imaging (PLI). More on the latter [here](https://doi.org/10.1109/TMI.2024.3357659), [here](https://koza.if.uj.edu.pl/files/d0bf762aba4f68695caac0f1d5745279/09059856.pdf) or [here](https://arxiv.org/abs/2501.04145).
 
 
 ## Prerequisites
