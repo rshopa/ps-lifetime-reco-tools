@@ -164,8 +164,11 @@ setBestFitEnvironment <- function( LMAParams )
       if(AddWeight) RSE.weight <- 1 / FitTab8Cols[constraint, 1]^2
       # check if 1 solution or many (vector or tab)
       if( n.solutions > 1)
-        out.lst[["TabFiltered"]] <- cbind( FitTab8Cols[constraint, 2:8], RSE.weight )
-      else out.lst[["TabFiltered"]] <- c( FitTab8Cols[constraint, 2:8], RSE.weight )
+        out.lst[["TabFiltered"]] <- 
+          cbind( t(apply(FitTab8Cols[constraint, 2:8], 1, ..reorderTaus2Comp)), 
+                 RSE.weight )
+      else out.lst[["TabFiltered"]] <- 
+          c( ..reorderTaus2Comp(FitTab8Cols[constraint, 2:8]), RSE.weight )
     }
     return( out.lst )
   }
@@ -214,8 +217,11 @@ setBestFitEnvironment <- function( LMAParams )
       if(AddWeight) RSE.weight <- 1 / FitTab9Cols[constraint, 1]^2
       # check if 1 solution or many (vector or tab)
       if( n.solutions > 1)
-        out.lst[["TabFiltered"]] <- cbind( FitTab9Cols[constraint, 2:9], RSE.weight )
-      else out.lst[["TabFiltered"]] <- c( FitTab9Cols[constraint, 2:9], RSE.weight )
+        out.lst[["TabFiltered"]] <- 
+          cbind( t(apply(FitTab9Cols[constraint, 2:9], 1, ..reorderTaus3Comp)),
+                 RSE.weight )
+      else out.lst[["TabFiltered"]] <- 
+          c( ..reorderTaus3Comp(FitTab9Cols[constraint, 2:9]), RSE.weight )
     }
     return( out.lst )
   }
