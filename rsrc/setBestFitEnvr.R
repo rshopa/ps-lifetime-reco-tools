@@ -4,12 +4,6 @@
 ############################
 
 setBestFitEnvironment <- function( LMAParams )
-############################
-# author: Roman Shopa
-# Roman.Shopa[at]ncbj.gov.pl
-############################
-
-setBestFitEnvironment <- function( LMAParams )
 {
   # initialise/copy routine vars (horten names)
   .tau.rng      <- LMAParams[["tau_rng_ns"]]

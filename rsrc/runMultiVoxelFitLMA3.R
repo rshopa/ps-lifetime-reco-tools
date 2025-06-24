@@ -38,7 +38,7 @@ if( length(args) == 0 | args[1] == "-h" | args[1] == "--help" | args[1] == "-?")
   cat("-irm : intensity ratio mode: 0 - all free (default), 1 - fixed p-Ps : o-Ps = 10% : 30 %, 2 - direct : p-Ps : o-Ps = 60% : 10% : 30%\n")
   cat("-preserve-na : voxels with non-converged fits are coerced to NAs (default - to median)\n")
   cat("-na-to-zero : voxels with non-converged fits are coerced to 0 (default - to median)\n")
-  cat("-three-stage : adds a third-stage fit, linear scale with fixed tau_oPs\n")
+  cat("-three-stage : adds a third-stage fit, linear scale with fixed tau_oPs (only for ints ratio modes 0 and 2)\n")
   cat("-v/--verbose : shows info during each LMA fitting\n\n")
   stop("Stopped.")
 }

@@ -31,7 +31,7 @@ setPsLifetimeLMAFitEnvironment <- function()
     .lma.env      <<- setLMMultiCompFitEnvironment( .pars.env )
     .best.fit.env <<- setBestFitEnvironment( .pars.env[["lma.params"]] )
   }
-  
+
   # defines spectrum and updates tau_dir from matter density (in g/mL, e.g. 1.0 for water)
   .definePsLifetimeSpectrum <- function( DtAxisNs, HistAU, MatterDensitygmL = NULL )
   {
@@ -150,7 +150,7 @@ setPsLifetimeLMAFitEnvironment <- function()
                                        ReturnFullTable = TRUE ) # no errors (AddErrors = FALSE)
     DIR.best <- .best.fit.env[["findBestByRSEFromFilteredTab"]](
       .best.fit.env[["sortAndFilt3CompFits"]]( lmfit.dir[,c(1:7,9:10)], FALSE, TRUE, reorder.taus, Verbose ) ) # non-fixed Tau_dir, Add RSE weight ...
-    
+
     # ----------------- multi stage fit, tau_dir is free ----------------------
     # I - linear stage
     # re-check and update fit function name 
