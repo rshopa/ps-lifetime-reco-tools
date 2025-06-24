@@ -4,6 +4,12 @@
 ############################
 
 setBestFitEnvironment <- function( LMAParams )
+############################
+# author: Roman Shopa
+# Roman.Shopa[at]ncbj.gov.pl
+############################
+
+setBestFitEnvironment <- function( LMAParams )
 {
   # initialise/copy routine vars (horten names)
   .tau.rng      <- LMAParams[["tau_rng_ns"]]
@@ -18,7 +24,7 @@ setBestFitEnvironment <- function( LMAParams )
   ..sd.rng.outliers <- 3.5 # for filtering out outliers in KDE ("deeply" private)
   
   # -----------------------------------------------------------------------
-  # Default variables (LMA3):
+  # Default variables:
   # Sd(1), Mu(2), Idir(3), IpPs(4), IoPs(5), tau_dir(6), tau_oPs(7), Bgr(8)
   # Full table:
   # Sd(1), Mu(2), Idir(3), IpPs(4), IoPs(5), tau_dir(6), tau_pPs(7), tau_oPs(8), Bgr(9)
@@ -66,6 +72,7 @@ setBestFitEnvironment <- function( LMAParams )
   # Z-score, see sqlpad.io/tutorial/remove-outliers/
   ..noOutliersFactVector <- function(V)
   {
+    # if median (from LMAParams[["kde_params"]][["drop_outliers_by_median"]])
     if( .kde.pars.lst[["drop_outliers_by_median"]] ) z <- (V - median(V)) / sd(V)
     else z <- (V - mean(V)) / sd(V)
     return( abs(z) <= ..sd.rng.outliers )
@@ -162,8 +169,8 @@ setBestFitEnvironment <- function( LMAParams )
       # Sd(1), Mu(2), Ishrt(3), IoPs(4), tau_shrt(5), tau_oPs(6), Bgr(7), RSE_wgt(8)
       RSE.weight <- rep(1, n.solutions)
       if(AddWeight) RSE.weight <- 1 / FitTab8Cols[constraint, 1]^2
-      # check if 1 solution or many (vector or tab)
-      if( n.solutions > 1)
+      # check if 1 solution or many (vector or tab) and reorder
+      if( n.solutions > 1 )
         out.lst[["TabFiltered"]] <- 
           cbind( t(apply(FitTab8Cols[constraint, 2:8], 1, ..reorderTaus2Comp)), 
                  RSE.weight )
@@ -177,22 +184,24 @@ setBestFitEnvironment <- function( LMAParams )
   sortAndFilt3CompFits <- function( FitTab9Cols, 
                                     FixedTauDir = FALSE, # for 3-component
                                     AddWeight   = TRUE,
+                                    ReorderTaus = TRUE,  # forces the order that tau_dir < tau_oPs
                                     Verbose     = TRUE ){
     constraint <- apply(FitTab9Cols, 1, function(l)
     {
       if( !is.na(l[1]) )
       {
         # drop RSE column
-        l.cp <- if(FixedTauDir) l[2:9] else ..reorderTaus3Comp(l[2:9])
+        l.cp <- if(FixedTauDir | !ReorderTaus) l[2:9] else ..reorderTaus3Comp(l[2:9])
         # check only Sd, not Mu
         F.SIGMA <- l.cp[1] > .sd.rng[1] & l.cp[1] < .sd.rng[2]
         # intensities
-        F.INTS <- l.cp[3] > 0 & l.cp[4] > 0 & l.cp[5] > 0
+        F.INTS <- l.cp[3] > 0 & #l.cp[4] > 0 & 
+          l.cp[5] > 0
         if( F.INTS ){
           i.pPs.norm <- l.cp[4] / sum(l.cp[3:5])
           i.frac     <- l.cp[3] / l.cp[5]
           F.INTS <- F.INTS & i.pPs.norm > .int.min.pPs & 
-                             i.frac > .int.frac.rng[1] & i.frac < .int.frac.rng[2]
+            i.frac > .int.frac.rng[1] & i.frac < .int.frac.rng[2]
         }
         F.BGR <- l.cp[8] >= -.x.tol
         # tau's
@@ -217,33 +226,40 @@ setBestFitEnvironment <- function( LMAParams )
       if(AddWeight) RSE.weight <- 1 / FitTab9Cols[constraint, 1]^2
       # check if 1 solution or many (vector or tab)
       if( n.solutions > 1)
-        out.lst[["TabFiltered"]] <- 
-          cbind( t(apply(FitTab9Cols[constraint, 2:9], 1, ..reorderTaus3Comp)),
-                 RSE.weight )
-      else out.lst[["TabFiltered"]] <- 
-          c( ..reorderTaus3Comp(FitTab9Cols[constraint, 2:9]), RSE.weight )
+      {
+        if(ReorderTaus) out.lst[["TabFiltered"]] <- 
+            cbind( t(apply(FitTab9Cols[constraint, 2:9], 1, ..reorderTaus3Comp)),
+                   RSE.weight )
+        else out.lst[["TabFiltered"]] <- cbind( FitTab9Cols[constraint, 2:9], RSE.weight )
+      } else {
+        if(ReorderTaus) out.lst[["TabFiltered"]] <- 
+            c( ..reorderTaus3Comp(FitTab9Cols[constraint, 2:9]), RSE.weight )
+        else out.lst[["TabFiltered"]] <- c( FitTab9Cols[constraint, 2:9], RSE.weight )
+      }
     }
     return( out.lst )
   }
-  sortFitTabByNComponents <- function( FitTabFullParams,
-                                       ExcludePPs  = TRUE,
-                                       FixedTauDir = TRUE,
-                                       Verbose     = TRUE )
-  {
-    n.cols <- ncol(FitTabFullParams)
-    if( n.cols == 8 ) # for 2-component model
-      return( sortAndFilt2CompFits( FitTabFullParams,
-                                    AddWeight   = TRUE,
-                                    ReorderTaus = TRUE,
-                                    Verbose     = Verbose ) )
-    else {
-      out.cols <- if(ExcludePPs) c(1:7, 9:10) else (1:n.cols)
-      return( sortAndFilt3CompFits( FitTabFullParams[,out.cols],          # exclude tau_pPs?
-                                    FixedTauDir = FixedTauDir,                   # for 3-component
-                                    AddWeight   = TRUE,
-                                    Verbose     = Verbose ) )
-    }
-  }
+  # TODO: probably redundant
+  # sortFitTabByNComponents <- function( FitTabFullParams,
+  #                                      ExcludePPs  = TRUE,
+  #                                      FixedTauDir = TRUE,
+  #                                      Verbose     = TRUE )
+  # {
+  #   n.cols <- ncol(FitTabFullParams)
+  #   if( n.cols == 8 ) # for 2-component model
+  #     return( sortAndFilt2CompFits( FitTabFullParams,
+  #                                   AddWeight   = TRUE,
+  #                                   ReorderTaus = TRUE,
+  #                                   Verbose     = Verbose ) )
+  #   else {
+  #     out.cols <- if(ExcludePPs) c(1:7, 9:10) else (1:n.cols)
+  #     return( sortAndFilt3CompFits( FitTabFullParams[,out.cols],          # exclude tau_pPs?
+  #                                   FixedTauDir = FixedTauDir,                   # for 3-component
+  #                                   AddWeight   = TRUE,
+  #                                   ReorderTaus = TRUE,
+  #                                   Verbose     = Verbose ) )
+  #   }
+  # }
   # for Sd, Mu [and Tau_short]
   sortFilt2Or3Cols <- function( TabParams,
                                 AddWeight    = TRUE,

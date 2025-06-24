@@ -65,7 +65,6 @@ setLMMultiCompFitEnvironment <- function( ParamsEnvr )
     if( !is.null(LowThrldDt) )  FACT.DT <- FACT.DT & p_DF.lin.fit[["x"]] >= LowThrldDt
     if( !is.null(HighThrldDt) ) FACT.DT <- FACT.DT & p_DF.lin.fit[["x"]] <= HighThrldDt
     return( p_DF.lin.fit[FACT.DT,] )
-    
   }
 
   # ----------------------------------------------------------------------------
@@ -165,6 +164,18 @@ setLMMultiCompFitEnvironment <- function( ParamsEnvr )
       Bg, " )"
     ))
   }
+  ..makeLMFormula3CmpTaupPsBgrFixedITausRatio <- function(Bg = p_bgr.avg)
+  {
+    Ldir <- 1/p_tau.dir
+    LpPs <- 1/p_tau.pPs
+    as.formula(paste(
+      "y ~ Idir * Ldir * exp( Ldir * (Mu + 0.5 * Ldir * Sd^2 - x) ) * pnorm( (Mu - x) / Sd + Ldir * Sd, lower.tail = F) +
+           IoPs / 3 * ", LpPs, " * exp( ", LpPs, " * (Mu - x) + ", 0.5 * LpPs^2, " * Sd^2 ) * pnorm( (Mu - x) / Sd + ", LpPs, " * Sd, lower.tail = F )  +
+           IoPs * LoPs * exp( LoPs * (Mu + 0.5 * LoPs * Sd^2 - x) ) * pnorm( (Mu - x) / Sd + LoPs * Sd, lower.tail = F) + ",
+      Bg
+    ))
+  }
+  # --- log scale ---
   ..makeLMFormula3CmpLogTaupPsBlurBgr <- function(Sd, Mu, Bg = p_bgr.avg)
   {
     LpPs   <- 1 / p_tau.pPs
@@ -187,6 +198,18 @@ setLMMultiCompFitEnvironment <- function( ParamsEnvr )
                        ", 0.1 * LpPs, " * exp( ", LpPs * Mu + 0.5 * (LpPs * Sd)^2, " - ", LpPs, " * x ) * pnorm(", MuBySd + LpPs * Sd, " - x * ", SdInv, ", lower.tail = F) + 
                        0.3 * LoPs * exp( LoPs * (", Mu, " + 0.5 * LoPs * ", Sd^2, " - x) ) * pnorm(", MuBySd, " + LoPs * ", Sd, " - x * ", SdInv, ", lower.tail = F) + ",
       Bg, ") )"
+    ))
+  }
+  ..makeLMFormula3CmpLogTaupPsBlurBgrFixedITausRatio <- function(Sd, Mu, Bg = p_bgr.avg)
+  {
+    LpPs   <- 1 / p_tau.pPs
+    SdInv  <- 1 / Sd
+    MuBySd <- Mu / Sd
+    as.formula(paste(
+      "y ~ log( Idir * Ldir * exp( Ldir * (", Mu, " + 0.5 * Ldir * ", Sd^2, " - x) ) * pnorm(", MuBySd, " + Ldir * ", Sd, " - x * ", SdInv, ", lower.tail = F) + 
+                IoPs *", LpPs / 3, " * exp( ", LpPs * Mu + 0.5 * (LpPs * Sd)^2, " - ", LpPs, " * x ) * pnorm(", MuBySd + LpPs * Sd, " - x * ", SdInv, ", lower.tail = F) + 
+                IoPs * LoPs * exp( LoPs * (", Mu, " + 0.5 * LoPs * ", Sd^2, " - x) ) * pnorm(", MuBySd, " + LoPs * ", Sd, " - x * ", SdInv, ", lower.tail = F) + ",
+      Bg, ")"
     ))
   }  
   # warning: no log!
@@ -449,6 +472,36 @@ setLMMultiCompFitEnvironment <- function( ParamsEnvr )
     } 
     return( out.vec )
   }
+  # with (partially) fixed intensity ratios for taus
+  ..makeTabLMA3AllFreeLinITausRatioFixed <- function( LMAResult, ReturnFullTable, AddErrors )
+  {
+    ncol.out <- if( AddErrors ) 5L else 3L # no full table
+    if( ReturnFullTable ) 
+      ncol.out <- if( AddErrors ) 16L else 10L
+    out.vec  <- rep( as.numeric(NA), ncol.out )
+    if( class(LMAResult) == "nls" )
+    {
+      lm.out     <- summary(LMAResult)[["parameters"]][,1:2]
+      lm.params  <- lm.out[,1]
+      # convert lambdas -> taus, add tau_pPs and background (must be pre-calculated)
+      fit.params <- c( lm.params[1:3], lm.params[4] / c(3, 1),
+                       1 / lm.params[5], p_tau.pPs, 1 / lm.params[6], p_bgr.avg )
+      out.vec[1] <- .estimateRSELinear( fit.params, TAxNs   = p_DF.lin.fit[["x"]], 
+                                                    HstNorm = p_DF.lin.fit[["y"]] ) 
+      if( ReturnFullTable ) 
+        out.vec[2:10]   <- fit.params
+      else out.vec[2:3] <- lm.params[1:2]
+      if( AddErrors ){
+        lm.errs   <- lm.out[,2]
+        if( ReturnFullTable ) 
+          out.vec[11:16] <- c( lm.errs[1:4], 
+                               abs( 1 / lm.params[5] - 1 / (lm.params[5] - lm.errs[5]) ),
+                               abs( 1 / lm.params[6] - 1 / (lm.params[6] - lm.errs[6]) ))
+        else out.vec[4:5] <- lm.errs[1:2]
+      }
+    } 
+    return( out.vec )
+  }
 
   # ------------------ MAIN FUNCTIONS ------------------------------------------
   # WARNING: the spectrum must be predefined
@@ -665,7 +718,6 @@ setLMMultiCompFitEnvironment <- function( ParamsEnvr )
     formula.low.fit <- ..makeLMFormula3CmpTausBgrFixedIratio()                             # default Bg = p_bgr.avg (must be pre-calculated)
     hst.size        <- length( p_Dt )
     Reduce("rbind", mclapply(seq_len(.n.seeds), function(i)
-    # Reduce("rbind", lapply(1:5, function(i)
     {
       ini.vec.df <- INIGuessDF[i,] # data frame
       DF.local <- if( FullSpan ) p_DF.lin.fit 
@@ -787,6 +839,72 @@ setLMMultiCompFitEnvironment <- function( ParamsEnvr )
       } else return( rep( as.numeric(NA), 10 ) )
     }, mc.cores = .n.cores))
   }
+  
+  # ----------------------------------------------------------------------------
+  #      LMA3 with (partially) fixed intensity ratio I_pPs : I_oPs = 1 : 3
+  # ----------------------------------------------------------------------------
+  runSeededLMA3AllFreeLinITausRatioFixedOMP <- function( INIGuessDF,
+                                                         FullSpan        = FALSE,     # if true, ignores INIS[["UpThrldDt"]]
+                                                         LowThrldDt      = NULL,
+                                                         ReturnFullTable = FALSE,    # if false, returns only Sd and Mu
+                                                         AddErrors       = FALSE )
+  {
+    formula.low.fit <- ..makeLMFormula3CmpTaupPsBgrFixedITausRatio()            # default Bg = p_bgr.avg (must be pre-calculated)
+    hst.size        <- length( p_Dt )
+    Reduce("rbind", mclapply(seq_len(.n.seeds), function(i)
+    {
+      ini.vec.df <- INIGuessDF[i,] # data frame
+      DF.local <- if( FullSpan ) p_DF.lin.fit 
+      else ..shrinkHistByDtRange( hst.size, LowThrldDt, ini.vec.df[["UpThrldDt"]] )
+      lower.params <- ..makeVectorOfLowerBounds( 6L, ini.vec.df )
+      result <- try({
+        lm.fit.blur <- nlsLM( formula.low.fit,
+                              data  = DF.local,
+                              start = list( Sd    = ini.vec.df[["Sd"]],
+                                            Mu    = ini.vec.df[["Mu"]],
+                                            Idir  = ini.vec.df[["Idir"]],
+                                            IoPs  = ini.vec.df[["IoPs1"]],
+                                            Ldir  = 1 / ini.vec.df[["Tau_dir"]],
+                                            LoPs  = 1 / ini.vec.df[["Tau_oPs1"]] ),
+                              trace   = FALSE,
+                              lower   = lower.params,
+                              control = .nls.control )
+      }, silent = TRUE)
+      return( ..makeTabLMA3AllFreeLinITausRatioFixed( result, ReturnFullTable, AddErrors ) )
+    }, mc.cores = .n.cores))
+  }
+  runSeededLMA3FreeTauDirLogITausRatioFixedOMP <- function( INIGuessDF, BestGauss ) # BestGauss = c(Sd, Mu)
+  {
+    formula.log.fit <- 
+      ..makeLMFormula3CmpLogTaupPsBlurBgrFixedITausRatio( Sd = BestGauss[1],
+                                                          Mu = BestGauss[2] ) # default Bg = bgr.avg (must be pre-calculated)
+    Reduce("rbind", mclapply(seq_len(.n.seeds), function(i)
+    {
+      ini.vec.df <- INIGuessDF[i,] # data frame
+      lower <- if( ini.vec.df[["Bounded"]] ) -ini.vec.df[["PosConstrErr"]] else -Inf
+      result     <- try({
+        lm.fit.log <- nlsLM( formula.log.fit,
+                             data  = p_DF.log.fit,
+                             start = list( Idir  = ini.vec.df[["Idir"]],
+                                           IoPs  = ini.vec.df[["IoPs1"]],
+                                           Ldir  = 1 / ini.vec.df[["Tau_dir"]],
+                                           LoPs  = 1 / ini.vec.df[["Tau_oPs1"]] ),
+                             trace   = FALSE,
+                             lower   = rep( lower, 4 ),
+                             control = .nls.control )
+      }, silent = TRUE)
+      # no need for separate function
+      if( class(result) == "nls" )
+      {
+        lm.params    <- summary(lm.fit.log)[["parameters"]]
+        params.final <- c( BestGauss[1], BestGauss[2],
+                           lm.params[1], lm.params[2] / c(3, 1),
+                           1 / lm.params[3,1], p_tau.pPs, 1 / lm.params[4,1],
+                           p_bgr.avg )
+        return( as.numeric(c( .estimateRSELog( params.final ), params.final )) )
+      } else return( rep( as.numeric(NA), 10))
+    }, mc.cores = .n.cores))
+  }  
 
   rm( list = c("ParamsEnvr") ) 
   return( environment() )
