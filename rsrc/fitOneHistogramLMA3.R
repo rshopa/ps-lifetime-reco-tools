@@ -20,7 +20,7 @@ args <- commandArgs(trailingOnly = TRUE)
 USAGE.LINE <- paste("\nUsage:\n",
                     "Rscript [--vanilla] fitOneHistogramLMA3.R", "-p <json_params>", 
                     "-s <lifetime_spectrum_ascii>", "-o <output_prefix>\n",
-                    "[-fixed-ints-ratio] [-free-tau-direct] [-three-stage] [-d <material_density>]",
+                    "[-irm <ints ratio mode>] [-free-tau-direct] [-three-stage] [-d <material_density>]",
                     "[-v] [> <output_log>]\n\n")
 if( length(args) == 0 | args[1] == "-h" | args[1] == "--help" | args[1] == "-?")
 {
@@ -30,9 +30,9 @@ if( length(args) == 0 | args[1] == "-h" | args[1] == "--help" | args[1] == "-?")
   cat("-s/--hist : path to ASCII with a histogram of time delay spectrum (2-column [dt, ns | hst, au])\n")
   cat("-o/--out : output prefix (for JSON and RDS)\n")
   cat("\nOptional:\n")
-  cat("-fixed-ints-ratio : fixes intensity ratio - direct : p-Ps : o-Ps = 60% : 10% : 30%\n")
-  cat("-free-tau-direct : sets mean lifetime for direct free parameter (-d is ignored)\n")
-  cat("-three-stage : adds a third-stage fit, linear scale with fixed tau_oPs\n")
+  cat("-irm : intensity ratio mode: 0 - all free (default), 1 - fixed p-Ps : o-Ps = 10% : 30 %, 2 - direct : p-Ps : o-Ps = 60% : 10% : 30%\n")
+  cat("-free-tau-direct : sets mean lifetime for direct free parameter (-d is ignored, only for ints ratio modes 0 and 2)\n")
+  cat("-three-stage : adds a third-stage fit, linear scale with fixed tau_oPs (only for ints ratio modes 0 and 2)\n")
   cat("-d/--density : in [g/mL], adjusts tau_dir by material density\n")
   cat("-v/--verbose : shows info during LMA fitting\n\n")
   stop("Stopped.")
@@ -41,7 +41,7 @@ params.json   <- NULL
 output.prefix <- NULL
 hist.path     <- NULL
 # optional
-int.ratio.fixed <- FALSE
+int.ratio.mode  <- 0L
 free.tau.direct <- FALSE
 three.stage     <- FALSE
 matter.density  <- NULL
@@ -53,7 +53,7 @@ for( i in seq_along(args) )
   if(args[i] == "-p" | args[i] == "--params") params.json <- args[i + 1]
   else if(args[i] == "-s" | args[i] == "--hist") hist.path <- args[i + 1]
   else if(args[i] == "-o" | args[i] == "--out") output.prefix <- args[i + 1]
-  else if(args[i] == "-fixed-ints-ratio") int.ratio.fixed <- TRUE
+  else if(args[i] == "-irm") int.ratio.mode <- as.integer(args[i + 1])
   else if(args[i] == "-free-tau-direct") free.tau.direct <- TRUE
   else if(args[i] == "-three-stage") three.stage <- TRUE
   else if(args[i] == "-d" | args[i] == "--density") 
@@ -92,7 +92,7 @@ DF.hist <- read.table( hist.path, header = FALSE, col.names = c("Dt", "Hst") )
 LMA3fit <- 
   fit.env[["fitHistByMultiStageLMA3IratioSwitchableOMP"]]( DF.hist[["Dt"]], 
                                                            DF.hist[["Hst"]], 
-                                                           IRatioFixed = int.ratio.fixed,
+                                                           IRatioMode = int.ratio.mode,
                                                            FixedTauDir = !free.tau.direct,
                                                            RefineWFixedTauoPs = three.stage,
                                                            MatterDensitygmL = matter.density,

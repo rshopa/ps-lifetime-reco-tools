@@ -21,7 +21,7 @@ USAGE.LINE <- paste("\nUsage:\n",
                     "Rscript [--vanilla] runMultiVoxelFitLMA3.R", "-p <json_params>\n", 
                     "-dt <min,max,n_bins>", "-s <lifetime_spectra>\n",
                     "-vox-ids <voxel_coordinates>", "-o <output_prefix>\n",
-                    "[-vox-size <x_mm,y_mm,z_mm>]", "[-fixed-ints-ratio]\n",
+                    "[-vox-size <x_mm,y_mm,z_mm>]", "[-irm <ints ratio mode>]", 
                     "[-preserve-na]", "[-na-to-zero]", "[-three-stage]\n",
                     "[-v] [> <output_log>]\n\n")
 if( length(args) == 0 | args[1] == "-h" | args[1] == "--help" | args[1] == "-?")
@@ -35,7 +35,7 @@ if( length(args) == 0 | args[1] == "-h" | args[1] == "--help" | args[1] == "-?")
   cat("-o/--out : output prefix (for JSON and RDS)\n")
   cat("\nOptional:\n")
   cat("-vox-size : (only for info) size of a voxel [x,y,z] (in milimetres) \n")
-  cat("-fixed-ints-ratio : fixes intensity ratio - I_direct : I_p-Ps : I_o-Ps = 60% : 10% : 30%\n")
+  cat("-irm : intensity ratio mode: 0 - all free (default), 1 - fixed p-Ps : o-Ps = 10% : 30 %, 2 - direct : p-Ps : o-Ps = 60% : 10% : 30%\n")
   cat("-preserve-na : voxels with non-converged fits are coerced to NAs (default - to median)\n")
   cat("-na-to-zero : voxels with non-converged fits are coerced to 0 (default - to median)\n")
   cat("-three-stage : adds a third-stage fit, linear scale with fixed tau_oPs\n")
@@ -48,11 +48,11 @@ hists.path    <- NULL
 voxels.path   <- NULL
 dt.params     <- NULL
 # optional
-vox.size        <- NULL     
-int.ratio.fixed <- FALSE
-three.stage     <- FALSE
-coerce.na.to    <- "median" # default: NAs are replaced by a median from other voxels
-verbose         <- FALSE
+vox.size       <- NULL     
+int.ratio.mode <- 0L
+three.stage    <- FALSE
+coerce.na.to   <- "median" # default: NAs are replaced by a median from other voxels
+verbose        <- FALSE
 
 for( i in seq_along(args) )
 {
@@ -62,7 +62,7 @@ for( i in seq_along(args) )
   else if(args[i] == "-dt") dt.params <- as.numeric(strsplit(args[i + 1], ",")[[1]])
   else if(args[i] == "-o" | args[i] == "--out") output.prefix <- args[i + 1]
   else if(args[i] == "-vox-size") vox.size <- as.numeric(strsplit(args[i + 1], ",")[[1]])
-  else if(args[i] == "-fixed-ints-ratio") int.ratio.fixed <- TRUE
+  else if(args[i] == "-irm") int.ratio.mode <- as.integer(args[i + 1])
   else if(args[i] == "-preserve-na") coerce.na.to <- NULL
   else if(args[i] == "-na-to-zero") coerce.na.to <- "zero"
   else if(args[i] == "-three-stage") three.stage <- TRUE
@@ -141,7 +141,7 @@ for( i in seq_len(n.hsts) )
   LMA3fit <- 
     fit.env[["fitHistByMultiStageLMA3IratioSwitchableOMP"]]( dt.ns, 
                                                              hists.tab[i,], 
-                                                             IRatioFixed = int.ratio.fixed,
+                                                             IRatioMode = int.ratio.mode,
                                                              FixedTauDir = FALSE,             # tau_dir is always free for multi-voxel
                                                              RefineWFixedTauoPs = three.stage,
                                                              RefinedDtRange = dt.range.3rd.stage,
@@ -163,7 +163,7 @@ for( i in seq_len(n.hsts) )
     out[[nm]][["RSElog"]][i]  <- as.numeric( LMA3fit[[nm]][["RSElog"]] )
   }
   # show on screen
-  if(int.ratio.fixed)
+  if(int.ratio.mode == 2L)
   {
     cat("\n\t====== Voxel no.", i, " (fixed intensity ratios) =====\nfit type : Tau_oPs, ns : Bgr : RSE_log \n")
     for( nm in fit.type.names )
