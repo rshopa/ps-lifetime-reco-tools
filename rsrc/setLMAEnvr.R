@@ -95,7 +95,7 @@ setLMMultiCompFitEnvironment <- function( ParamsEnvr )
     p_hst.norm   <<- HstVec[FACT.DT]
     # data frames - for LMA fits
     p_DF.lin.fit <<- data.frame( x = p_Dt, y = p_hst.norm )
-    p_DF.log.fit <<- data.frame( x = p_Dt[FAC.LOG & FAC.POS], y = log(p_hst.norm[FAC.LOG & FAC.POS]) )
+    p_DF.log.fit <<- data.frame( x = TAxNs[FAC.LOG & FAC.POS], y = log(HstVec[FAC.LOG & FAC.POS]) )
     
     # IMPORTANT: assess background W I T H O U T filtering for log!
     p_bgr.avg <<- if(HistParams[["calc_bgr_from_full_span"]]) .assessPIBgrFromTails( HstVec, TAxNs, TRUE )
